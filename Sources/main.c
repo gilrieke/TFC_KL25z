@@ -37,8 +37,6 @@
 #include "Servo.h"
 #include "PwmLdd1.h"
 #include "WAIT1.h"
-#include "Motor_Right_R.h"
-#include "Motor_Left_R.h"
 #include "Motor_Left.h"
 #include "PwmLdd2.h"
 #include "TU2.h"
@@ -134,79 +132,11 @@ void Read_Camera(void){
 	return;
 }
 
-void APP_thresholding(void){
-	
-	uint16_t dato_mayor,dato_menor,umbral_viejo,contador_g1,contador_g2;
-	uint8_t  i,flag_umbral;
-	uint16_t grupo1,grupo2;
-	
-	dato_mayor = Camera_Values[PIX_MIN];
-	dato_menor = Camera_Values[PIX_MIN];
-	
-	for(i=PIX_MIN+1 ; i<=PIX_MAX ; i++){
-		if(dato_mayor < Camera_Values[i] )
-			dato_mayor = Camera_Values[i];
-		if(dato_menor > Camera_Values[i])
-			dato_menor = Camera_Values[i];
-	}
-		
-	umbral_viejo = (dato_mayor + dato_menor)/2;
-	
-	flag_umbral = 0;
-	do{		
-		contador_g1 = 1;
-		contador_g2 = 1;
-		grupo1 = 0;
-		grupo2 = 0;
-		
-		for(i=PIX_MIN ; i<=PIX_MAX ; i++){
-			
-			if(Camera_Values[i] > umbral_viejo){
-				grupo1 = grupo1 + Camera_Values[i];
-				contador_g1++;
-			}
-			else{
-				grupo2 = grupo2 + Camera_Values[i];
-				contador_g2++;
-			}
-		}
-	
-		grupo1 = grupo1 / contador_g1;
-		grupo2 = grupo2 / contador_g2;
-	
-		Camera_Threshold = (grupo1 + grupo2)/2;
-		
-		if(umbral_viejo == Camera_Threshold)
-			flag_umbral = 1;
-		else
-			umbral_viejo = Camera_Threshold;
-		
-	}while(flag_umbral != 1);
-	
-	return;
-}
-
-
-void APP_binarization(void){
-	
-	uint8_t i;
-	
-	for(i=PIX_MIN ; i<=PIX_MAX ; i++){
-		if(Camera_Values[i] > Camera_Threshold)
-			Camera_Values[i] = 1;
-		else
-			Camera_Values[i] = 0; 
-	}
-	delay(10);
-	return;
-}
-
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
 /*lint -restore Enable MISRA rule (6.3) checking. */
 {
   /* Write your local variable definition here */
-	word i;
 	
   /*** Processor Expert internal initialization. DON'T REMOVE THIS CODE!!! ***/
   PE_low_level_init();
@@ -216,42 +146,8 @@ int main(void)
   Camera_Analog_Calibrate(TRUE);
   Motor_Enable_SetVal();
   for(;;) {
-	  	  
-	  /*Servo_SetRatio16(SERVO_LEFT);
-	  WAIT1_Waitms(1000);
-	  Servo_SetRatio16(SERVO_HALF);
-	  WAIT1_Waitms(1000);
-	  Servo_SetRatio16(SERVO_RIGHT);
-	  WAIT1_Waitms(1000);*/
-	  
-	  /*for(i=0;i<100;i++){
-		  Motor_Left(i);
-		  Motor_Right(i);
-		  WAIT1_Waitms(250);
-	  }
-	  
-	  for(i=100;i>0;i--){
-		  Motor_Left(i);
-		  Motor_Right(i);
-		  WAIT1_Waitms(250);
-	  }
-
-	  
-	  for(i=0;i<100;i++){
-		  Motor_Left_R_SetDutyUS(Motor_Left_R_DeviceData,100-i);
-		  Motor_Right_R_SetDutyUS(Motor_Right_R_DeviceData,100-i);
-		  WAIT1_Waitms(250);
-	  }
-	  
-	  for(i=100;i>0;i--){
-		  Motor_Left_R_SetDutyUS(Motor_Left_R_DeviceData,100-i);
-		  Motor_Right_R_SetDutyUS(Motor_Right_R_DeviceData,100-i);
-		  WAIT1_Waitms(250);
-	  }*/
-	  
+	  	  	  
 	  Read_Camera();
-	  //APP_thresholding();
-	  //APP_binarization();
 	  WAIT1_Waitms(5);
   }
 
