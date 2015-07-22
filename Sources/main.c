@@ -39,8 +39,6 @@
 #include "WAIT1.h"
 #include "Motor_Right_R.h"
 #include "Motor_Left_R.h"
-#include "AS2.h"
-#include "ASerialLdd1.h"
 #include "Motor_Left.h"
 #include "PwmLdd2.h"
 #include "TU2.h"
@@ -67,17 +65,15 @@
 #define PIX_MIN 0
 #define PIX_MAX 128
 
-uint8_t Camera_Values[128];
+uint8_t Camera_Values[128], u8_Centro = 0;
 byte Camera_Threshold;
 
 
 /* User includes (#include below this line is not maintained by Processor Expert) */
-void delay(int time){
-	int i;
-	for(i=0;i<time;i++){
-		
+void delay(uint32_t time){
+	while(time--){
+		asm ("nop");
 	}
-	return;
 }
 
 void Motor_Left(word time){
@@ -97,18 +93,44 @@ void Servo_Duty(word duty){
 
 void Read_Camera(void){
 	int i;
+	uint16_t u16_MaxValue = 0, u16_threshold = 0, u16_suma = 0;
+	uint8_t u8_PixelCntr = 0;
+	
 	Camera_SI_SetVal();
+	delay(20);
 	Camera_Clock_SetVal();
-	Camera_Analog_Measure(TRUE);	
+	delay(20);
 	Camera_SI_ClrVal();
-	for(i=0;i<128;i++){
-		Camera_Clock_ClrVal();
-		Camera_Analog_GetValue8(&Camera_Values[i]);
-		delay(60);
-		Camera_Clock_SetVal();
-		Camera_Analog_Measure(TRUE);
-	}
+	delay(20);
 	Camera_Clock_ClrVal();
+	for(i=0;i<128;i++){
+		delay(20);
+		Camera_Clock_SetVal();
+		Camera_Analog_Measure(TRUE);	
+		Camera_Analog_GetValue8(&Camera_Values[i]);
+		delay(20);
+		Camera_Clock_ClrVal();
+		
+		if(Camera_Values[i] > u16_MaxValue) {
+			u16_MaxValue  = Camera_Values[i];
+		}
+		
+	}
+	
+	u16_threshold = (u16_MaxValue/20) * 17;
+	for(i=0;i<128;i++){
+		if (Camera_Values[i] > u16_threshold){
+			u16_suma += i;
+			u8_PixelCntr++;
+		}
+		
+		else {
+			Camera_Values[i] = 0;
+		}
+	}
+	
+	u8_Centro = (uint8_t)(u16_suma / u8_PixelCntr);
+	
 	return;
 }
 
@@ -228,9 +250,9 @@ int main(void)
 	  }*/
 	  
 	  Read_Camera();
-	  APP_thresholding();
-	  APP_binarization();
-	  WAIT1_Waitms(1);
+	  //APP_thresholding();
+	  //APP_binarization();
+	  WAIT1_Waitms(5);
   }
 
   /*** Don't write any code pass this line, or it will be deleted during code generation. ***/
