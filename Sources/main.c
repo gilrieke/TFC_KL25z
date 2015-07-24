@@ -13,7 +13,7 @@
 **         No public methods
 **
 ** ###################################################################*/
-/*!//pruebaa de control de versiones 
+/*!//putada que no sirve 
 ** @file main.c
 ** @version 01.01
 ** @brief
